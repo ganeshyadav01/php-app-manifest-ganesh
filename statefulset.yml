@@ -4,26 +4,31 @@ kind: StatefulSet
 metadata:
   name: mysql
 spec:
-  service: mysqldb
   replicas: 1
+
   selector:
     matchLabels:
       app: app-database
+
+  serviceName: mysqldb
+
   template:
     metadata:
       labels:
         app: app-database
+
     spec:
       containers:
         - name: dbcont
           image: sgyadav/phpapp:dbimage
+
           ports:
             - containerPort: 3306
-          #secret integration
+
           envFrom:
             - secretRef:
                 name: bankapp-db-secret
-          #Resources quota
+
           resources:
             requests:
               memory: "128Mi"
@@ -31,14 +36,12 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "200m"
+
           volumeMounts:
-            - name: pvc-1
+            - name: mysql-storage
               mountPath: /var/lib/mysql
-      volumeClaimTemplates:
-        - metadata:
-            name: pvc-1
-          spec:
-            accessModes: -"ReadWriteOnce"
-            resources:
-              requests:
-                storage: 2Gi
+
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: pvc-1
